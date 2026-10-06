@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PharmaCare | Pharmacy Management System</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f4f7fb;color:#172033}
+.hidden{display:none!important}
+
+.login-page{
+ min-height:100vh;display:flex;align-items:center;justify-content:center;
+ padding:20px;background:linear-gradient(135deg,#043746,#087f8c,#1769aa)
+}
+.login-box{
+ width:420px;padding:40px;background:white;border-radius:22px;
+ box-shadow:0 25px 70px rgba(0,0,0,.3)
+}
+.login-logo{text-align:center;font-size:32px;font-weight:bold;color:#087f8c;margin-bottom:8px}
+.login-subtitle{text-align:center;color:#667085;margin-bottom:25px}
+.login-box input,.login-box select{
+ width:100%;padding:13px;margin-bottom:13px;border:1px solid #d0d5dd;
+ border-radius:9px;font-size:15px
+}
+.login-btn,.primary{
+ width:100%;padding:13px;border:0;border-radius:9px;
+ background:#087f8c;color:white;font-weight:bold;cursor:pointer
+}
+.primary{width:auto;padding:11px 16px}
+.login-btn:hover,.primary:hover{background:#066b75}
+.login-error{text-align:center;color:#b42318;margin-top:12px;min-height:20px}
+
+.sidebar{
+ position:fixed;left:0;top:0;bottom:0;width:250px;background:#102a43;
+ color:white;padding:22px 15px;overflow-y:auto
+}
+.logo{font-size:24px;font-weight:bold;padding:5px 10px}
+.role{color:#9bdce2;font-size:13px;padding:8px 10px 22px}
+.nav-item{
+ display:block;width:100%;border:0;background:transparent;color:#dbeafe;
+ text-align:left;padding:12px;border-radius:8px;margin:4px 0;
+ cursor:pointer;font-size:14px
+}
+.nav-item:hover,.nav-item.active{background:#087f8c;color:white}
+.logout{background:#b42318;margin-top:20px}
+.main{margin-left:250px;padding:25px;min-height:100vh}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px}
+.topbar h2{font-size:25px}
+.user-badge{background:white;padding:10px 16px;border-radius:10px;box-shadow:0 2px 10px #0001}
+
+.section{display:none}
+.section.active{display:block}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:18px;margin-top:20px}
+.card,.portal-card{
+ background:white;padding:20px;border-radius:14px;box-shadow:0 2px 12px #00000014;margin-bottom:18px
+}
+.card h3,.portal-card h3{margin-bottom:12px}
+.stat{color:#087f8c;font-size:30px;font-weight:bold}
+.card input,.card select,.card textarea{
+ width:100%;padding:12px;border:1px solid #d0d5dd;border-radius:8px;margin:6px 0;font-size:14px
+}
+table{width:100%;border-collapse:collapse}
+th,td{padding:12px;text-align:left;border-bottom:1px solid #eaecf0}
+th{background:#eef5f7}
+.badge{
+ display:inline-block;padding:5px 10px;border-radius:20px;background:#e6f7f8;
+ color:#087f8c;font-size:12px;font-weight:bold
+}
+.danger{background:#fee4e2;color:#b42318}
+.warn{background:#fff4cc;color:#8a5b00}
+.success{background:#dcfae6;color:#067647}
+.action{
+ border:0;background:#eef5f7;padding:7px 10px;border-radius:6px;
+ margin-right:5px;cursor:pointer
+}
+.portal-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px}
+.info{
+ padding:12px;background:#eef5f7;border-radius:8px;margin:8px 0
+}
+.empty{text-align:center;padding:25px;color:#667085}
+.modal{
+ position:fixed;inset:0;background:#0008;display:none;
+ align-items:center;justify-content:center;padding:20px;z-index:10
+}
+.modal.show{display:flex}
+.modal-box{
+ background:white;padding:25px;border-radius:15px;width:500px;max-width:100%
+}
+.modal-box h2{margin-bottom:15px}
+.close{float:right;border:0;background:#eee;padding:5px 10px;cursor:pointer}
+.small{font-size:12px;color:#667085}
+@media(max-width:750px){
+ .sidebar{width:190px}.main{margin-left:190px}
+}
+</style>
+</head>
+
+<body>
+
+<!-- LOGIN -->
+<div id="loginPage" class="login-page">
+<div class="login-box">
+<div class="login-logo">💊 PharmaCare</div>
+<p class="login-subtitle">Pharmacy Management System</p>
+
+<input id="loginUser" placeholder="Username / Full Name" autocomplete="off">
+<input id="loginPassword" type="password" placeholder="Password">
+
+<select id="loginRole">
+<option value="admin">Admin / Pharmacist</option>
+<option value="doctor">Doctor</option>
+<option value="customer">Customer / Patient</option>
+</select>
+
+<button class="login-btn" onclick="login()">Login</button>
+<button class="login-btn" style="margin-top:10px;background:#1769aa" onclick="openDoctorRegistration()">＋ New Doctor Registration</button>
+<p id="loginError" class="login-error"></p>
+</div>
+</div>
+
+<!-- APPLICATION -->
+<div id="application" class="hidden">
+
+<aside class="sidebar">
+<div class="logo">💊 PharmaCare</div>
+<div id="roleText" class="role"></div>
+
+<nav id="adminNav" class="hidden">
+<button class="nav-item" onclick="showSection('dashboard')">📊 Dashboard</button>
+<button class="nav-item" onclick="showSection('medicines')">💊 Medicines</button>
+<button class="nav-item" onclick="showSection('inventory')">📦 Inventory</button>
+<button class="nav-item" onclick="showSection('billing')">🧾 Billing</button>
+<button class="nav-item" onclick="showSection('sales')">📈 Sales</button>
+<button class="nav-item" onclick="showSection('suppliers')">🚚 Suppliers</button>
+<button class="nav-item" onclick="showSection('reports')">📊 Reports</button>
+</nav>
+
+<nav id="doctorNav" class="hidden">
+<button class="nav-item" onclick="showSection('doctorDashboard')">🩺 Dashboard</button>
+<button class="nav-item" onclick="showSection('doctorPatients')">👥 My Patients</button>
+<button class="nav-item" onclick="showSection('doctorConsultations')">📅 Consultations</button>
+<button class="nav-item" onclick="showSection('doctorRecords')">📋 Medical Records</button>
+<button class="nav-item" onclick="showSection('prescriptions')">💊 Prescriptions</button>
+</nav>
+
+<nav id="customerNav" class="hidden">
+<button class="nav-item" onclick="showSection('customerDashboard')">👤 My Dashboard</button>
+<button class="nav-item" onclick="showSection('customerProfile')">🧑 My Profile</button>
+<button class="nav-item" onclick="showSection('customerConsultations')">🩺 Consultation</button>
+<button class="nav-item" onclick="showSection('customerRecords')">📋 Medical Records</button>
+<button class="nav-item" onclick="showSection('customerPrescriptions')">💊 Prescriptions</button>
+<button class="nav-item" onclick="showSection('customerBills')">🧾 My Bills</button>
+<button class="nav-item" onclick="showSection('customerPurchases')">🛒 Purchases</button>
+</nav>
+
+<button class="nav-item logout" onclick="logout()">🚪 Logout</button>
+</aside>
+
+<main class="main">
+
+<div class="topbar">
+<h2 id="pageTitle">Dashboard</h2>
+<div class="user-badge">👤 <span id="currentUser"></span></div>
+</div>
+
+<!-- ADMIN DASHBOARD -->
+<section id="dashboard" class="section">
+<h1>Pharmacy Dashboard</h1>
+
+<div class="cards">
+<div class="card"><h3>Total Medicines</h3><div id="dashMedicines" class="stat">0</div></div>
+<div class="card"><h3>Total Stock</h3><div id="dashStock" class="stat">0</div></div>
+<div class="card"><h3>Total Sales</h3><div id="dashSales" class="stat">₹0</div></div>
+<div class="card"><h3>Total Bills</h3><div id="dashBills" class="stat">0</div></div>
+<div class="card"><h3>Today's Sales</h3><div id="dashTodaySales" class="stat">₹0</div></div>
+<div class="card"><h3>Low Stock Items</h3><div id="dashLowStock" class="stat">0</div></div>
+<div class="card"><h3>Expiry Alerts</h3><div id="dashExpiry" class="stat">0</div></div>
+</div>
+
+<div class="card">
+<h3>Inventory Alerts</h3>
+<div id="dashboardAlerts"></div>
+</div>
+
+<div class="card">
+<h3>Recent Bills / Patient Purchases</h3>
+<div id="recentBills"></div>
+</div>
+
+<div class="card">
+<h3>Quick Pharmacy Summary</h3>
+<div class="portal-grid">
+<div class="info"><b>Patients with Purchases</b><br><span id="dashPurchasingPatients">0</span></div>
+<div class="info"><b>Units Sold</b><br><span id="dashUnitsSold">0</span></div>
+<div class="info"><b>Registered Doctors</b><br><span id="dashDoctorCount">0</span></div>
+</div>
+</div>
+</section>
+
+<!-- MEDICINES -->
+<section id="medicines" class="section">
+<h1>Medicine Management</h1>
+
+<div class="card">
+<button class="primary" onclick="openMedicineModal()">＋ Add Medicine</button>
+<input id="medicineSearch" placeholder="Search medicine..." oninput="renderMedicines()">
+</div>
+
+<div class="card">
+<table>
+<thead>
+<tr>
+<th>ID</th><th>Medicine</th><th>Category</th><th>Price</th>
+<th>Stock</th><th>Expiry</th><th>Status</th><th>Action</th>
+</tr>
+</thead>
+<tbody id="medicineTable"></tbody>
+</table>
+</div>
+</section>
+
+<!-- INVENTORY -->
+<section id="inventory" class="section">
+<h1>Inventory</h1>
+<div class="cards">
+<div class="card"><h3>Available</h3><div id="availableCount" class="stat">0</div></div>
+<div class="card"><h3>Low Stock</h3><div id="lowCount" class="stat">0</div></div>
+<div class="card"><h3>Expired</h3><div id="expiredCount" class="stat">0</div></div>
+</div>
+<div class="card">
+<table>
+<thead><tr><th>Medicine</th><th>Category</th><th>Stock</th><th>Expiry</th><th>Status</th></tr></thead>
+<tbody id="inventoryTable"></tbody>
+</table>
+</div>
+</section>
+
+<!-- BILLING -->
+<section id="billing" class="section">
+<h1>Customer Billing</h1>
+<div class="card">
+<h3>Create Customer Bill</h3>
+
+<input id="billCustomer" placeholder="Customer username / full name">
+
+<label>Bill Date</label>
+<input id="billDate" type="date">
+
+<select id="billMedicine"></select>
+
+<input id="billQty" type="number" min="1" value="1">
+
+<button class="primary" onclick="createBill()">Generate Bill</button>
+
+<div id="billResult" class="info"></div>
+</div>
+</section>
+
+<!-- SALES -->
+<section id="sales" class="section">
+<h1>Sales & Patient Purchases</h1>
+<div class="card">
+<table>
+<thead>
+<tr><th>Bill</th><th>Date</th><th>Customer</th><th>Medicine</th><th>Qty</th><th>Total</th></tr>
+</thead>
+<tbody id="salesTable"></tbody>
+</table>
+</div>
+</section>
+
+<!-- SUPPLIERS -->
+<section id="suppliers" class="section">
+<h1>Suppliers</h1>
+<div class="card">
+<table>
+<thead><tr><th>Supplier</th><th>Company</th><th>Phone</th><th>Address</th></tr></thead>
+<tbody id="supplierTable"></tbody>
+</table>
+</div>
+</section>
+
+<!-- REPORTS -->
+<section id="reports" class="section">
+<h1>Reports</h1>
+<div class="cards">
+<div class="card"><h3>Total Revenue</h3><div id="reportRevenue" class="stat">₹0</div></div>
+<div class="card"><h3>Total Bills</h3><div id="reportBills" class="stat">0</div></div>
+<div class="card"><h3>Low Stock Items</h3><div id="reportLow" class="stat">0</div></div>
+</div>
+</section>
+
+<!-- DOCTOR DASHBOARD -->
+<section id="doctorDashboard" class="section">
+<h1>Doctor Dashboard</h1>
+<div class="cards">
+<div class="card"><h3>My Patients</h3><div id="doctorPatientCount" class="stat">0</div></div>
+<div class="card"><h3>My Consultations</h3><div id="doctorConsultCount" class="stat">0</div></div>
+<div class="card"><h3>My Prescriptions</h3><div id="doctorRxCount" class="stat">0</div></div>
+<div class="card"><h3>Upcoming Consultations</h3><div id="doctorUpcomingCount" class="stat">0</div></div>
+<div class="card"><h3>Pending Requests</h3><div id="doctorPendingCount" class="stat">0</div></div>
+</div>
+<div class="card">
+<h3>Today's Doctor Activity</h3>
+<div id="doctorActivitySummary" class="info"></div>
+</div>
+<div class="card">
+<h3>Privacy Notice</h3>
+<p>You can only access patient records assigned to your doctor account.</p>
+</div>
+</section>
+
+<!-- DOCTOR PATIENTS -->
+<section id="doctorPatients" class="section">
+<h1>My Patients</h1>
+<div class="card">
+<table>
+<thead><tr><th>Patient</th><th>Phone</th><th>Email</th><th>Assigned Doctor</th></tr></thead>
+<tbody id="doctorPatientTable"></tbody>
+</table>
+</div>
+</section>
+
+<!-- DOCTOR CONSULTATIONS -->
+<section id="doctorConsultations" class="section">
+<h1>My Consultations</h1>
+<div class="card">
+<table>
+<thead><tr><th>Patient</th><th>Date</th><th>Type</th><th>Status</th></tr></thead>
+<tbody id="doctorConsultTable"></tbody>
+</table>
+</div>
+</section>
+
+<!-- DOCTOR RECORDS -->
+<section id="doctorRecords" class="section">
+<h1>Patient Medical Records</h1>
+<div class="card">
+<select id="doctorPatientSelect" onchange="loadDoctorRecord()"></select>
+<div id="doctorRecordBox"></div>
+</div>
+</section>
+
+<!-- PRESCRIPTIONS -->
+<section id="prescriptions" class="section">
+<h1>Prescriptions</h1>
+<div class="card">
+<select id="prescriptionPatient"></select>
+<input id="prescriptionMedicine" placeholder="Medicine">
+<input id="prescriptionDose" placeholder="Dosage / Instructions">
+<button class="primary" onclick="savePrescription()">Issue Prescription</button>
+</div>
+<div class="card">
+<h3>Issued Prescriptions</h3>
+<div id="doctorPrescriptionList"></div>
+</div>
+</section>
+
+<!-- CUSTOMER DASHBOARD -->
+<section id="customerDashboard" class="section">
+<h1>Welcome, <span id="customerWelcome"></span></h1>
+
+<div class="portal-grid">
+<div class="portal-card">
+<h3>🩺 Doctor Consultation</h3>
+<p>Book and view your consultations.</p>
+<button class="primary" onclick="showSection('customerConsultations')">Open</button>
+</div>
+<div class="portal-card">
+<h3>📋 Medical Records</h3>
+<p>View only your own medical records.</p>
+<button class="primary" onclick="showSection('customerRecords')">Open</button>
+</div>
+<div class="portal-card">
+<h3>💊 Prescriptions</h3>
+<p>View prescriptions issued to you.</p>
+<button class="primary" onclick="showSection('customerPrescriptions')">Open</button>
+</div>
+<div class="portal-card">
+<h3>🧾 Bills</h3>
+<p>View only your own pharmacy bills.</p>
+<button class="primary" onclick="showSection('customerBills')">Open</button>
+</div>
+<div class="portal-card">
+<h3>🛒 Purchase Medicines</h3>
+<p>Buy available medicines directly from the pharmacy.</p>
+<button class="primary" onclick="showSection('customerPurchases')">Buy Now</button>
+</div>
+</div>
+
+<div class="cards">
+<div class="card"><h3>Total Purchases</h3><div id="customerPurchaseCount" class="stat">0</div></div>
+<div class="card"><h3>Total Spent</h3><div id="customerSpent" class="stat">₹0</div></div>
+<div class="card"><h3>Active Prescriptions</h3><div id="customerRxCount" class="stat">0</div></div>
+<div class="card"><h3>Upcoming Consultation</h3><div id="customerUpcoming" class="stat">—</div></div>
+</div>
+</section>
+
+<!-- CUSTOMER PROFILE -->
+<section id="customerProfile" class="section">
+<h1>My Profile</h1>
+<div class="card">
+<input id="profileName" placeholder="Full Name">
+<input id="profilePhone" placeholder="Phone Number">
+<input id="profileEmail" placeholder="Email Address">
+<input id="profileAddress" placeholder="Address">
+<button class="primary" onclick="saveProfile()">Save Profile</button>
+<p id="profileMsg" class="info"></p>
+</div>
+</section>
+
+<!-- CUSTOMER CONSULTATIONS -->
+<section id="customerConsultations" class="section">
+<h1>Doctor Consultation</h1>
+
+<div class="card">
+<h3>Book Consultation</h3>
+<select id="customerDoctor"></select>
+<input id="consultDate" type="date">
+<select id="consultType">
+<option>Online</option>
+<option>In Clinic</option>
+</select>
+<button class="primary" onclick="bookConsultation()">Book Consultation</button>
+</div>
+
+<div class="card">
+<h3>My Consultations</h3>
+<div id="customerConsultList"></div>
+</div>
+</section>
+
+<!-- CUSTOMER RECORDS -->
+<section id="customerRecords" class="section">
+<h1>My Medical Records</h1>
+<div class="card" id="customerRecordBox"></div>
+</section>
+
+<!-- CUSTOMER PRESCRIPTIONS -->
+<section id="customerPrescriptions" class="section">
+<h1>My Prescriptions</h1>
+<div class="card" id="customerRxList"></div>
+</section>
+
+<!-- CUSTOMER BILLS -->
+<section id="customerBills" class="section">
+<h1>My Bills</h1>
+<div class="card" id="customerBillList"></div>
+</section>
+
+<!-- CUSTOMER PURCHASES -->
+<section id="customerPurchases" class="section">
+<h1>Purchase Medicines</h1>
+
+<div class="card">
+<h3>Buy Medicine</h3>
+<p class="small">Select an available medicine and quantity. Stock will be reduced automatically and the purchase will appear in Pharmacist/Admin Sales.</p>
+<select id="customerPurchaseMedicine"></select>
+<input id="customerPurchaseQty" type="number" min="1" value="1" placeholder="Quantity">
+<button class="primary" onclick="purchaseMedicine()">Purchase Medicine</button>
+<div id="purchaseResult" class="info"></div>
+</div>
+
+<div class="card">
+<h3>My Purchase History</h3>
+<div id="customerPurchaseList"></div>
+</div>
+</section>
+
+</main>
+</div>
+
+<!-- DOCTOR REGISTRATION MODAL -->
+<div id="doctorRegistrationModal" class="modal">
+<div class="modal-box">
+<button class="close" onclick="closeDoctorRegistration()">✕</button>
+<h2>New Doctor Registration</h2>
+<p class="small">Create a doctor account for future login.</p>
+
+<input id="regDoctorName" placeholder="Full Name (e.g. Dr. Neha Patil)">
+<input id="regDoctorPhone" placeholder="Phone Number">
+<input id="regDoctorEmail" type="email" placeholder="Email Address">
+<input id="regDoctorSpecialization" placeholder="Specialization">
+<input id="regDoctorPassword" type="password" placeholder="Create Password">
+
+<button class="primary" onclick="registerDoctor()">Register Doctor</button>
+<p id="doctorRegMsg" class="info"></p>
+</div>
+</div>
+
+<!-- MEDICINE MODAL -->
+<div id="medicineModal" class="modal">
+<div class="modal-box">
+<button class="close" onclick="closeMedicineModal()">✕</button>
+<h2 id="medicineModalTitle">Add Medicine</h2>
+
+<input id="medicineId" type="hidden">
+<input id="mName" placeholder="Medicine Name">
+<input id="mCategory" placeholder="Category">
+<input id="mPrice" type="number" min="0" placeholder="Price">
+<input id="mQuantity" type="number" min="0" placeholder="Stock Quantity">
+<input id="mReorder" type="number" min="0" placeholder="Reorder Level">
+<input id="mExpiry" type="date" placeholder="Expiry Date">
+
+<button class="primary" onclick="saveMedicine()">Save Medicine</button>
+</div>
+</div>
+
+<script>
+/* =========================
+   DATA
+========================= */
+
+const DEFAULT_DOCTORS=[
+ "Dr. Rahul Sharma",
+ "Dr. Priya Mehta",
+ "Dr. Amit Patil"
+];
+
+const DOCTOR_KEY="pharmaRegisteredDoctors";
+const MED_KEY="pharmaMedicines";
+const SALES_KEY="pharmaSales";
+const PROFILE_KEY="pharmaProfiles";
+const CONSULT_KEY="pharmaConsultations";
+const RX_KEY="pharmaPrescriptions";
+const RECORD_KEY="pharmaMedicalRecords";
+
+const defaultMedicines=[
+ {id:"MED001",name:"Paracetamol 500mg",category:"Tablet",price:25,quantity:100,reorder:10,expiry:"2027-12-31"},
+ {id:"MED002",name:"Cetirizine 10mg",category:"Tablet",price:30,quantity:8,reorder:10,expiry:"2026-10-15"},
+ {id:"MED003",name:"Amoxicillin 500mg",category:"Capsule",price:85,quantity:20,reorder:10,expiry:"2027-07-20"},
+ {id:"MED004",name:"Vitamin C",category:"Supplement",price:120,quantity:45,reorder:10,expiry:"2028-03-10"},
+ {id:"MED005",name:"Antiseptic Cream",category:"Cream",price:75,quantity:16,reorder:10,expiry:"2027-05-18"}
+];
+
+let registeredDoctors=load(DOCTOR_KEY,DEFAULT_DOCTORS.map(name=>({
+ name,
+ phone:"",
+ email:"",
+ specialization:"General",
+ password:name+"@123"
+})));
+
+let medicines=load(MED_KEY,defaultMedicines);
+let sales=load(SALES_KEY,[]);
+let profiles=load(PROFILE_KEY,{});
+let consultations=load(CONSULT_KEY,[]);
+let prescriptions=load(RX_KEY,[]);
+let records=load(RECORD_KEY,{});
+
+let currentRole="";
+let currentUsername="";
+
+/* =========================
+   HELPERS
+========================= */
+
+function load(key,def){
+ try{
+  const x=localStorage.getItem(key);
+  return x?JSON.parse(x):JSON.parse(JSON.stringify(def));
+ }catch(e){return JSON.parse(JSON.stringify(def))}
+}
+
+function saveAll(){
+ localStorage.setItem(DOCTOR_KEY,JSON.stringify(registeredDoctors));
+ localStorage.setItem(MED_KEY,JSON.stringify(medicines));
+ localStorage.setItem(SALES_KEY,JSON.stringify(sales));
+ localStorage.setItem(PROFILE_KEY,JSON.stringify(profiles));
+ localStorage.setItem(CONSULT_KEY,JSON.stringify(consultations));
+ localStorage.setItem(RX_KEY,JSON.stringify(prescriptions));
+ localStorage.setItem(RECORD_KEY,JSON.stringify(records));
+}
+
+function money(n){
+ return "₹"+Number(n||0).toLocaleString("en-IN",{maximumFractionDigits:2});
+}
+
+function esc(v){
+ return String(v??"").replace(/[&<>'"]/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",
+ "'":"&#39;",'"':"&quot;"
+ }[c]));
+}
+
+function today(){
+ return new Date().toISOString().slice(0,10);
+}
+
+function formatDate(d){
+ if(!d)return "—";
+ return new Date(d+"T00:00:00").toLocaleDateString("en-IN",{
+  day:"2-digit",month:"short",year:"numeric"
+ });
+}
+
+function expired(m){
+ return m.expiry && m.expiry<today();
+}
+
+function stockStatus(m){
+ if(m.quantity===0)return ["Out of Stock","danger"];
+ if(m.quantity<=m.reorder)return ["Low Stock","warn"];
+ return ["Available","success"];
+}
+
+function getProfile(user){
+ return profiles[user]||{
+  name:user,phone:"",email:"",address:""
+ };
+}
+
+/* =========================
+   LOGIN
+========================= */
+
+function login(){
+
+ const role=document.getElementById("loginRole").value;
+ const username=document.getElementById("loginUser").value.trim();
+ const password=document.getElementById("loginPassword").value;
+ const error=document.getElementById("loginError");
+
+ error.textContent="";
+
+ if(!username||!password){
+  error.textContent="Please enter username and password.";
+  return;
+ }
+
+ if(role==="admin"){
+
+  if(username.toLowerCase()!=="pharmacare" ||
+     password!=="pharmacare@123"){
+   error.textContent="Invalid username or password.";
+   return;
+  }
+
+  currentRole="admin";
+  currentUsername="PharmaCare";
+ }
+
+ else if(role==="doctor"){
+
+  const registeredDoctors =
+    JSON.parse(localStorage.getItem("pharmaRegisteredDoctors") || "[]");
+
+  const doctor = registeredDoctors.find(d =>
+    d.name === username
+  );
+
+  const defaultDoctor =
+    DOCTORS.includes(username);
+
+  if(!doctor && !defaultDoctor){
+    error.textContent="Doctor account not registered.";
+    return;
+  }
+
+  const correctPassword =
+    doctor ? doctor.password : username + "@123";
+
+  if(password !== correctPassword){
+    error.textContent="Invalid username or password.";
+    return;
+  }
+
+  currentRole="doctor";
+  currentUsername=username;
+ }
+
+ else if(role==="customer"){
+
+  if(password!==username+"@123"){
+   error.textContent="Invalid username or password.";
+   return;
+  }
+
+  currentRole="customer";
+  currentUsername=username;
+
+  if(!profiles[username]){
+   profiles[username]={name:username,phone:"",email:"",address:""};
+   saveAll();
+  }
+ }
+
+ localStorage.setItem("pharmaRole",currentRole);
+ localStorage.setItem("pharmaUser",currentUsername);
+
+ openApplication();
+}
+
+/* =========================
+   DOCTOR REGISTRATION
+========================= */
+
+function openDoctorRegistration(){
+ document.getElementById("doctorRegistrationModal").classList.add("show");
+ document.getElementById("doctorRegMsg").textContent="";
+}
+
+function closeDoctorRegistration(){
+ document.getElementById("doctorRegistrationModal").classList.remove("show");
+}
+
+function registerDoctor(){
+
+ const name=document.getElementById("regDoctorName").value.trim();
+ const phone=document.getElementById("regDoctorPhone").value.trim();
+ const email=document.getElementById("regDoctorEmail").value.trim();
+ const specialization=document.getElementById("regDoctorSpecialization").value.trim();
+ const password=document.getElementById("regDoctorPassword").value;
+
+ if(!name||!phone||!email||!specialization||!password){
+  document.getElementById("doctorRegMsg").textContent="Please fill all registration details.";
+  return;
+ }
+
+ if(registeredDoctors.some(d=>d.name.toLowerCase()===name.toLowerCase())){
+  document.getElementById("doctorRegMsg").textContent="A doctor with this name is already registered.";
+  return;
+ }
+
+ registeredDoctors.push({
+  name,
+  phone,
+  email,
+  specialization,
+  password
+ });
+
+ saveAll();
+
+ document.getElementById("doctorRegMsg").innerHTML=
+ "Registration successful. Your login username is <b>"+esc(name)+"</b>.";
+
+ document.getElementById("loginUser").value=name;
+ document.getElementById("loginRole").value="doctor";
+
+ document.getElementById("regDoctorName").value="";
+ document.getElementById("regDoctorPhone").value="";
+ document.getElementById("regDoctorEmail").value="";
+ document.getElementById("regDoctorSpecialization").value="";
+ document.getElementById("regDoctorPassword").value="";
+
+ setTimeout(closeDoctorRegistration,1200);
+}
+
+function getDoctorList(){
+ return registeredDoctors.map(d=>d.name);
+}
+
+/* =========================
+   OPEN APP
+========================= */
+
+function openApplication(){
+
+ document.getElementById("loginPage").classList.add("hidden");
+ document.getElementById("application").classList.remove("hidden");
+
+ document.getElementById("currentUser").textContent=currentUsername;
+
+ document.getElementById("roleText").textContent=
+ currentRole==="admin"?"ADMIN / PHARMACIST":
+ currentRole==="doctor"?"DOCTOR":"CUSTOMER / PATIENT";
+
+ document.getElementById("adminNav").classList.toggle("hidden",currentRole!=="admin");
+ document.getElementById("doctorNav").classList.toggle("hidden",currentRole!=="doctor");
+ document.getElementById("customerNav").classList.toggle("hidden",currentRole!=="customer");
+
+ renderAll();
+
+ if(currentRole==="admin")showSection("dashboard");
+ if(currentRole==="doctor")showSection("doctorDashboard");
+ if(currentRole==="customer")showSection("customerDashboard");
+}
+
+/* =========================
+   LOGOUT
+========================= */
+
+function logout(){
+ localStorage.removeItem("pharmaRole");
+ localStorage.removeItem("pharmaUser");
+
+ currentRole="";
+ currentUsername="";
+
+ document.getElementById("application").classList.add("hidden");
+ document.getElementById("loginPage").classList.remove("hidden");
+
+ document.getElementById("loginUser").value="";
+ document.getElementById("loginPassword").value="";
+}
+
+/* =========================
+   NAVIGATION
+========================= */
+
+function showSection(id){
+
+ if(currentRole==="admin" &&
+ !["dashboard","medicines","inventory","billing","sales","suppliers","reports"].includes(id))return;
+
+ if(currentRole==="doctor" &&
+ !["doctorDashboard","doctorPatients","doctorConsultations","doctorRecords","prescriptions"].includes(id))return;
+
+ if(currentRole==="customer" &&
+ !["customerDashboard","customerProfile","customerConsultations","customerRecords","customerPrescriptions","customerBills","customerPurchases"].includes(id))return;
+
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+
+ const section=document.getElementById(id);
+ if(section)section.classList.add("active");
+
+ const titles={
+ dashboard:"Dashboard",
+ medicines:"Medicine Management",
+ inventory:"Inventory",
+ billing:"Customer Billing",
+ sales:"Sales History",
+ suppliers:"Suppliers",
+ reports:"Reports",
+ doctorDashboard:"Doctor Dashboard",
+ doctorPatients:"My Patients",
+ doctorConsultations:"My Consultations",
+ doctorRecords:"Medical Records",
+ prescriptions:"Prescriptions",
+ customerDashboard:"Customer Dashboard",
+ customerProfile:"My Profile",
+ customerConsultations:"Doctor Consultation",
+ customerRecords:"My Medical Records",
+ customerPrescriptions:"My Prescriptions",
+ customerBills:"My Bills",
+ customerPurchases:"My Purchases"
+ };
+
+ document.getElementById("pageTitle").textContent=titles[id]||"PharmaCare";
+ renderAll();
+}
+
+/* =========================
+   DASHBOARD
+========================= */
+
+function renderDashboard(){
+
+ document.getElementById("dashMedicines").textContent=medicines.length;
+
+ document.getElementById("dashStock").textContent=
+ medicines.reduce((a,m)=>a+Number(m.quantity),0);
+
+ document.getElementById("dashSales").textContent=
+ money(sales.reduce((a,s)=>a+Number(s.total),0));
+
+ document.getElementById("dashBills").textContent=sales.length;
+
+ const todaySales=sales.filter(s=>s.date===today());
+ const todayTotal=todaySales.reduce((a,s)=>a+Number(s.total),0);
+ const lowStock=medicines.filter(m=>m.quantity>0&&m.quantity<=m.reorder).length;
+ const expiryAlerts=medicines.filter(expired).length;
+ const purchasingPatients=new Set(sales.map(s=>s.customer.toLowerCase())).size;
+ const unitsSold=sales.reduce((a,s)=>a+Number(s.qty),0);
+
+ const ds=document.getElementById("dashTodaySales");
+ const dl=document.getElementById("dashLowStock");
+ const de=document.getElementById("dashExpiry");
+ const dp=document.getElementById("dashPurchasingPatients");
+ const du=document.getElementById("dashUnitsSold");
+ const dd=document.getElementById("dashDoctorCount");
+
+ if(ds)ds.textContent=money(todayTotal);
+ if(dl)dl.textContent=lowStock;
+ if(de)de.textContent=expiryAlerts;
+ if(dp)dp.textContent=purchasingPatients;
+ if(du)du.textContent=unitsSold;
+ if(dd)dd.textContent=registeredDoctors.length;
+
+ const alerts=medicines.filter(m=>m.quantity<=m.reorder||expired(m));
+
+ document.getElementById("dashboardAlerts").innerHTML=
+ alerts.length?
+ alerts.map(m=>{
+  const [st,cl]=stockStatus(m);
+  return `<div class="info">
+  <b>${esc(m.name)}</b> — ${m.quantity} units
+  <span class="badge ${expired(m)?"danger":cl}">
+  ${expired(m)?"Expired":st}</span>
+  </div>`;
+ }).join("")
+ :"<div class='empty'>All inventory levels are healthy.</div>";
+
+ document.getElementById("recentBills").innerHTML=
+ sales.slice(-5).reverse().map(s=>`
+ <div class="info">
+ <b>${esc(s.invoice)}</b> — ${esc(s.customer)}
+ <span style="float:right">${money(s.total)}</span>
+ ${s.source==="Patient Purchase"?'<span class="badge success">Patient Purchase</span>':''}
+ <br><span class="small">${formatDate(s.date)}</span>
+ </div>
+ `).join("")||"<div class='empty'>No bills recorded.</div>";
+}
+
+/* =========================
+   MEDICINES
+========================= */
+
+function renderMedicines(){
+
+ const q=(document.getElementById("medicineSearch")?.value||"").toLowerCase();
+
+ const rows=medicines.filter(m=>
+ [m.id,m.name,m.category].some(x=>
+ String(x).toLowerCase().includes(q)
+ ));
+
+ document.getElementById("medicineTable").innerHTML=
+ rows.map(m=>{
+  const [st,cl]=stockStatus(m);
+
+  return `<tr>
+  <td>${esc(m.id)}</td>
+  <td><b>${esc(m.name)}</b></td>
+  <td>${esc(m.category)}</td>
+  <td>${money(m.price)}</td>
+  <td>${m.quantity}</td>
+  <td>${formatDate(m.expiry)}</td>
+  <td><span class="badge ${expired(m)?"danger":cl}">
+  ${expired(m)?"Expired":st}</span></td>
+  <td>
+  <button class="action" onclick="editMedicine('${m.id}')">Edit</button>
+  <button class="action" onclick="deleteMedicine('${m.id}')">Delete</button>
+  </td>
+  </tr>`;
+ }).join("")||"<tr><td colspan='8'>No medicines found.</td></tr>";
+
+ renderMedicineSelect();
+}
+
+function renderMedicineSelect(){
+
+ const select=document.getElementById("billMedicine");
+ if(!select)return;
+
+ select.innerHTML=medicines.filter(m=>m.quantity>0 && !expired(m))
+ .map(m=>`<option value="${m.id}">
+ ${esc(m.name)} — ${money(m.price)} — Stock: ${m.quantity}
+ </option>`).join("");
+}
+
+function openMedicineModal(){
+
+ document.getElementById("medicineModalTitle").textContent="Add Medicine";
+ document.getElementById("medicineId").value="";
+ document.getElementById("mName").value="";
+ document.getElementById("mCategory").value="";
+ document.getElementById("mPrice").value="";
+ document.getElementById("mQuantity").value="";
+ document.getElementById("mReorder").value="10";
+ document.getElementById("mExpiry").value="";
+ document.getElementById("medicineModal").classList.add("show");
+}
+
+function editMedicine(id){
+
+ const m=medicines.find(x=>x.id===id);
+ if(!m)return;
+
+ document.getElementById("medicineModalTitle").textContent="Edit Medicine";
+ document.getElementById("medicineId").value=id;
+ document.getElementById("mName").value=m.name;
+ document.getElementById("mCategory").value=m.category;
+ document.getElementById("mPrice").value=m.price;
+ document.getElementById("mQuantity").value=m.quantity;
+ document.getElementById("mReorder").value=m.reorder;
+ document.getElementById("mExpiry").value=m.expiry;
+
+ document.getElementById("medicineModal").classList.add("show");
+}
+
+function saveMedicine(){
+
+ const id=document.getElementById("medicineId").value;
+
+ const data={
+  name:document.getElementById("mName").value.trim(),
+  category:document.getElementById("mCategory").value.trim(),
+  price:Number(document.getElementById("mPrice").value),
+  quantity:Number(document.getElementById("mQuantity").value),
+  reorder:Number(document.getElementById("mReorder").value),
+  expiry:document.getElementById("mExpiry").value
+ };
+
+ if(!data.name||!data.category||!data.expiry){
+  alert("Please complete all medicine details.");
+  return;
+ }
+
+ if(id){
+  Object.assign(medicines.find(m=>m.id===id),data);
+ }else{
+  data.id="MED"+String(Date.now()).slice(-6);
+  medicines.push(data);
+ }
+
+ saveAll();
+ closeMedicineModal();
+ renderAll();
+
+ alert("Medicine information saved successfully.");
+}
+
+function deleteMedicine(id){
+
+ if(!confirm("Delete this medicine?"))return;
+
+ medicines=medicines.filter(m=>m.id!==id);
+ saveAll();
+ renderAll();
+}
+
+function closeMedicineModal(){
+ document.getElementById("medicineModal").classList.remove("show");
+}
+
+/* =========================
+   INVENTORY
+========================= */
+
+function renderInventory(){
+
+ document.getElementById("availableCount").textContent=
+ medicines.filter(m=>m.quantity>m.reorder&&!expired(m)).length;
+
+ document.getElementById("lowCount").textContent=
+ medicines.filter(m=>m.quantity>0&&m.quantity<=m.reorder).length;
+
+ document.getElementById("expiredCount").textContent=
+ medicines.filter(expired).length;
+
+ document.getElementById("inventoryTable").innerHTML=
+ medicines.map(m=>{
+  const [st,cl]=stockStatus(m);
+
+  return `<tr>
+  <td>${esc(m.name)}</td>
+  <td>${esc(m.category)}</td>
+  <td>${m.quantity}</td>
+  <td>${formatDate(m.expiry)}</td>
+  <td><span class="badge ${expired(m)?"danger":cl}">
+  ${expired(m)?"Expired":st}</span></td>
+  </tr>`;
+ }).join("");
+}
+
+/* =========================
+   BILLING
+========================= */
+
+function createBill(){
+
+ const customer=document.getElementById("billCustomer").value.trim();
+ const date=document.getElementById("billDate").value;
+ const medId=document.getElementById("billMedicine").value;
+ const qty=Number(document.getElementById("billQty").value);
+
+ if(!customer){
+  alert("Enter customer username / full name.");
+  return;
+ }
+
+ if(!date){
+  alert("Please select the bill date.");
+  return;
+ }
+
+ if(date>today()){
+  alert("Bill date cannot be a future date.");
+  return;
+ }
+
+ if(qty<1){
+  alert("Quantity must be at least 1.");
+  return;
+ }
+
+ const m=medicines.find(x=>x.id===medId);
+
+ if(!m){
+  alert("Medicine not found.");
+  return;
+ }
+
+ if(expired(m)){
+  alert("This medicine has expired and cannot be billed.");
+  return;
+ }
+
+ if(qty>m.quantity){
+  alert("Insufficient stock.");
+  return;
+ }
+
+ const total=m.price*qty;
+
+ m.quantity-=qty;
+
+ const invoice="INV"+Date.now().toString().slice(-8);
+
+ const bill={
+  invoice,
+  customer,
+  medicine:m.name,
+  medicineId:m.id,
+  qty,
+  total,
+  date,
+  doctor:findCustomerDoctor(customer)
+ };
+
+ sales.push(bill);
+
+ saveAll();
+ renderAll();
+
+ document.getElementById("billResult").innerHTML=
+ `<b>Bill generated successfully.</b><br>
+ Invoice: ${invoice}<br>
+ Customer: ${esc(customer)}<br>
+ Medicine: ${esc(m.name)} × ${qty}<br>
+ Date: ${formatDate(date)}<br>
+ Total: <b>${money(total)}</b>`;
+
+ alert("Bill generated successfully.");
+}
+
+/* =========================
+   SALES
+========================= */
+
+function renderSales(){
+
+ document.getElementById("salesTable").innerHTML=
+ sales.slice().reverse().map(s=>`
+ <tr>
+ <td><b>${esc(s.invoice)}</b><br><span class="small">${s.source==="Patient Purchase"?"Patient Purchase":"Pharmacist Bill"}</span></td>
+ <td>${formatDate(s.date)}</td>
+ <td>${esc(s.customer)}</td>
+ <td>${esc(s.medicine)}</td>
+ <td>${s.qty}</td>
+ <td>${money(s.total)}</td>
+ </tr>
+ `).join("")||"<tr><td colspan='6'>No sales recorded.</td></tr>";
+}
+
+/* =========================
+   SUPPLIERS
+========================= */
+
+function renderSuppliers(){
+
+ document.getElementById("supplierTable").innerHTML=`
+ <tr>
+ <td>Aarav Distributors</td>
+ <td>Aarav Healthcare</td>
+ <td>9876543210</td>
+ <td>Mumbai</td>
+ </tr>
+ <tr>
+ <td>MedSupply India</td>
+ <td>MedSupply Healthcare</td>
+ <td>9876501234</td>
+ <td>Mumbai</td>
+ </tr>`;
+}
+
+/* =========================
+   REPORTS
+========================= */
+
+function renderReports(){
+
+ document.getElementById("reportRevenue").textContent=
+ money(sales.reduce((a,s)=>a+s.total,0));
+
+ document.getElementById("reportBills").textContent=sales.length;
+
+ document.getElementById("reportLow").textContent=
+ medicines.filter(m=>m.quantity<=m.reorder).length;
+}
+
+/* =========================
+   CUSTOMER PROFILE
+========================= */
+
+function renderCustomerProfile(){
+
+ if(currentRole!=="customer")return;
+
+ const p=getProfile(currentUsername);
+
+ document.getElementById("profileName").value=p.name||currentUsername;
+ document.getElementById("profilePhone").value=p.phone||"";
+ document.getElementById("profileEmail").value=p.email||"";
+ document.getElementById("profileAddress").value=p.address||"";
+ document.getElementById("customerWelcome").textContent=p.name||currentUsername;
+
+ const mine=sales.filter(s=>s.customer.toLowerCase()===currentUsername.toLowerCase());
+ const upcoming=consultations
+  .filter(c=>c.customer===currentUsername && c.date>=today())
+  .sort((a,b)=>a.date.localeCompare(b.date))[0];
+
+ const pc=document.getElementById("customerPurchaseCount");
+ const spent=document.getElementById("customerSpent");
+ const rxc=document.getElementById("customerRxCount");
+ const up=document.getElementById("customerUpcoming");
+
+ if(pc)pc.textContent=mine.length;
+ if(spent)spent.textContent=money(mine.reduce((a,s)=>a+Number(s.total),0));
+ if(rxc)rxc.textContent=prescriptions.filter(r=>r.patient===currentUsername&&r.status==="Active").length;
+ if(up)up.textContent=upcoming?formatDate(upcoming.date):"—";
+}
+
+function saveProfile(){
+
+ profiles[currentUsername]={
+  name:document.getElementById("profileName").value.trim()||currentUsername,
+  phone:document.getElementById("profilePhone").value.trim(),
+  email:document.getElementById("profileEmail").value.trim(),
+  address:document.getElementById("profileAddress").value.trim()
+ };
+
+ saveAll();
+
+ document.getElementById("profileMsg").textContent=
+ "Profile saved successfully.";
+
+ renderCustomerProfile();
+}
+
+function renderDoctorSelect(){
+ const select=document.getElementById("customerDoctor");
+ if(!select)return;
+ select.innerHTML=registeredDoctors.map(d=>
+  `<option value="${esc(d.name)}">${esc(d.name)} — ${esc(d.specialization||"Doctor")}</option>`
+ ).join("");
+}
+
+/* =========================
+   DOCTOR ASSIGNMENT
+========================= */
+
+function findCustomerDoctor(customer){
+
+ const c=consultations.filter(x=>x.customer===customer);
+
+ return c.length?c[c.length-1].doctor:"";
+}
+
+function getDoctorPatients(){
+
+ return Object.keys(profiles).filter(user=>{
+  return findCustomerDoctor(user)===currentUsername;
+ });
+}
+
+/* =========================
+   CONSULTATIONS
+========================= */
+
+function bookConsultation(){
+
+ const doctor=document.getElementById("customerDoctor").value;
+ const date=document.getElementById("consultDate").value;
+ const type=document.getElementById("consultType").value;
+
+ if(!date){
+  alert("Please select consultation date.");
+  return;
+ }
+
+ if(date<today()){
+  alert("Consultation date cannot be in the past.");
+  return;
+ }
+
+ consultations.push({
+  id:"APT"+Date.now(),
+  customer:currentUsername,
+  doctor,
+  date,
+  type,
+  status:"Pending"
+ });
+
+ saveAll();
+ renderAll();
+
+ alert("Consultation booked successfully.");
+}
+
+function renderCustomerConsultations(){
+
+ const mine=consultations.filter(c=>c.customer===currentUsername);
+
+ document.getElementById("customerConsultList").innerHTML=
+ mine.length?
+ mine.slice().reverse().map(c=>`
+ <div class="info">
+ <b>${esc(c.doctor)}</b><br>
+ Date: ${formatDate(c.date)}<br>
+ Type: ${esc(c.type)}<br>
+ <span class="badge">${esc(c.status)}</span>
+ </div>
+ `).join("")
+ :"<div class='empty'>No consultations found.</div>";
+}
+
+function renderDoctorConsultations(){
+
+ const mine=consultations.filter(c=>c.doctor===currentUsername);
+ const upcoming=mine.filter(c=>c.date>=today());
+ const pending=mine.filter(c=>c.status==="Pending");
+
+ const up=document.getElementById("doctorUpcomingCount");
+ const pen=document.getElementById("doctorPendingCount");
+ const act=document.getElementById("doctorActivitySummary");
+
+ if(up)up.textContent=upcoming.length;
+ if(pen)pen.textContent=pending.length;
+ if(act)act.innerHTML=
+  "<b>"+mine.length+"</b> total consultation(s), <b>"+
+  upcoming.length+"</b> upcoming and <b>"+
+  pending.length+"</b> pending request(s).";
+
+ document.getElementById("doctorConsultTable").innerHTML=
+ mine.length?
+ mine.slice().reverse().map(c=>`
+ <tr>
+ <td>${esc(c.customer)}</td>
+ <td>${formatDate(c.date)}</td>
+ <td>${esc(c.type)}</td>
+ <td><span class="badge">${esc(c.status)}</span></td>
+ </tr>
+ `).join("")
+ :"<tr><td colspan='4'>No consultations assigned.</td></tr>";
+
+ document.getElementById("doctorConsultCount").textContent=mine.length;
+}
+
+/* =========================
+   DOCTOR PATIENTS
+========================= */
+
+function renderDoctorPatients(){
+
+ const patients=getDoctorPatients();
+
+ document.getElementById("doctorPatientCount").textContent=patients.length;
+
+ document.getElementById("doctorPatientTable").innerHTML=
+ patients.length?
+ patients.map(user=>{
+  const p=getProfile(user);
+
+  return `<tr>
+  <td>${esc(p.name||user)}</td>
+  <td>${esc(p.phone||"Not provided")}</td>
+  <td>${esc(p.email||"Not provided")}</td>
+  <td>${esc(currentUsername)}</td>
+  </tr>`;
+ }).join("")
+ :"<tr><td colspan='4'>No patients assigned to you.</td></tr>";
+
+ const select=document.getElementById("doctorPatientSelect");
+
+ select.innerHTML=patients.map(user=>
+ `<option value="${esc(user)}">${esc(getProfile(user).name||user)}</option>`
+ ).join("");
+
+ if(patients.length)loadDoctorRecord();
+ else document.getElementById("doctorRecordBox").innerHTML=
+ "<div class='empty'>No patient records available.</div>";
+}
+
+/* =========================
+   MEDICAL RECORDS
+========================= */
+
+function loadDoctorRecord(){
+
+ const patient=document.getElementById("doctorPatientSelect").value;
+
+ if(!patient)return;
+
+ if(findCustomerDoctor(patient)!==currentUsername){
+  document.getElementById("doctorRecordBox").innerHTML=
+  "<div class='empty'>You do not have access to this patient.</div>";
+  return;
+ }
+
+ const p=getProfile(patient);
+ const r=records[patient]||{notes:"",blood:"",allergies:""};
+
+ document.getElementById("doctorRecordBox").innerHTML=`
+ <div class="info">
+ <b>Patient:</b> ${esc(p.name||patient)}<br>
+ <b>Phone:</b> ${esc(p.phone||"Not provided")}<br>
+ <b>Email:</b> ${esc(p.email||"Not provided")}
+ </div>
+
+ <input id="recordBlood" placeholder="Blood Group" value="${esc(r.blood||"")}">
+ <input id="recordAllergies" placeholder="Allergies" value="${esc(r.allergies||"")}">
+ <textarea id="recordNotes" rows="6" placeholder="Medical notes">${esc(r.notes||"")}</textarea>
+
+ <button class="primary" onclick="saveMedicalRecord('${esc(patient)}')">
+ Save Medical Record
+ </button>
+ `;
+}
+
+function saveMedicalRecord(patient){
+
+ if(findCustomerDoctor(patient)!==currentUsername){
+  alert("Access denied.");
+  return;
+ }
+
+ records[patient]={
+  blood:document.getElementById("recordBlood").value.trim(),
+  allergies:document.getElementById("recordAllergies").value.trim(),
+  notes:document.getElementById("recordNotes").value.trim(),
+  doctor:currentUsername,
+  updated:new Date().toISOString()
+ };
+
+ saveAll();
+ renderCustomerRecords();
+
+ alert("Medical record saved successfully.");
+}
+
+function renderCustomerRecords(){
+
+ const p=getProfile(currentUsername);
+ const r=records[currentUsername]||{};
+
+ const doctor=findCustomerDoctor(currentUsername);
+
+ document.getElementById("customerRecordBox").innerHTML=`
+ <div class="info"><b>Patient:</b> ${esc(p.name||currentUsername)}</div>
+ <div class="info"><b>Phone:</b> ${esc(p.phone||"Not provided")}</div>
+ <div class="info"><b>Email:</b> ${esc(p.email||"Not provided")}</div>
+ <div class="info"><b>Blood Group:</b> ${esc(r.blood||"Not recorded")}</div>
+ <div class="info"><b>Allergies:</b> ${esc(r.allergies||"None recorded")}</div>
+ <div class="info"><b>Doctor:</b> ${esc(doctor||"No doctor assigned")}</div>
+ <div class="info"><b>Medical Notes:</b><br>${esc(r.notes||"No medical notes available.")}</div>
+ `;
+}
+
+/* =========================
+   PRESCRIPTIONS
+========================= */
+
+function renderPrescriptionPatients(){
+
+ const patients=getDoctorPatients();
+
+ document.getElementById("prescriptionPatient").innerHTML=
+ patients.map(user=>
+ `<option value="${esc(user)}">${esc(getProfile(user).name||user)}</option>`
+ ).join("");
+}
+
+function savePrescription(){
+
+ const patient=document.getElementById("prescriptionPatient").value;
+ const medicine=document.getElementById("prescriptionMedicine").value.trim();
+ const dose=document.getElementById("prescriptionDose").value.trim();
+
+ if(!patient||!medicine||!dose){
+  alert("Please complete all prescription fields.");
+  return;
+ }
+
+ if(findCustomerDoctor(patient)!==currentUsername){
+  alert("You cannot issue a prescription to this patient.");
+  return;
+ }
+
+ prescriptions.push({
+  id:"RX"+Date.now(),
+  patient,
+  medicine,
+  dose,
+  doctor:currentUsername,
+  status:"Active",
+  date:today()
+ });
+
+ saveAll();
+
+ document.getElementById("prescriptionMedicine").value="";
+ document.getElementById("prescriptionDose").value="";
+
+ renderAll();
+
+ alert("Prescription issued successfully.");
+}
+
+function renderDoctorPrescriptions(){
+
+ const mine=prescriptions.filter(r=>r.doctor===currentUsername);
+
+ document.getElementById("doctorRxCount").textContent=mine.length;
+
+ document.getElementById("doctorPrescriptionList").innerHTML=
+ mine.length?
+ mine.slice().reverse().map(r=>`
+ <div class="info">
+ <b>${esc(getProfile(r.patient).name||r.patient)}</b><br>
+ ${esc(r.medicine)} — ${esc(r.dose)}<br>
+ <span class="small">${formatDate(r.date)}</span>
+ </div>
+ `).join("")
+ :"<div class='empty'>No prescriptions issued.</div>";
+}
+
+function renderCustomerPrescriptions(){
+
+ const mine=prescriptions.filter(r=>r.patient===currentUsername);
+
+ document.getElementById("customerRxList").innerHTML=
+ mine.length?
+ mine.slice().reverse().map(r=>`
+ <div class="info">
+ <b>Doctor:</b> ${esc(r.doctor)}<br>
+ <b>Medicine:</b> ${esc(r.medicine)}<br>
+ <b>Dosage:</b> ${esc(r.dose)}<br>
+ <b>Date:</b> ${formatDate(r.date)}<br>
+ <span class="badge success">${esc(r.status)}</span>
+ </div>
+ `).join("")
+ :"<div class='empty'>No prescriptions available.</div>";
+}
+
+function renderCustomerPurchaseSelect(){
+
+ const select=document.getElementById("customerPurchaseMedicine");
+ if(!select)return;
+
+ const available=medicines.filter(m=>m.quantity>0&&!expired(m));
+
+ select.innerHTML=available.map(m=>
+  `<option value="${esc(m.id)}">${esc(m.name)} — ${money(m.price)} — Stock: ${m.quantity}</option>`
+ ).join("");
+
+ if(!available.length){
+  select.innerHTML="<option value=''>No medicines currently available</option>";
+ }
+}
+
+function purchaseMedicine(){
+
+ const medId=document.getElementById("customerPurchaseMedicine").value;
+ const qty=Number(document.getElementById("customerPurchaseQty").value);
+ const result=document.getElementById("purchaseResult");
+
+ if(!medId){
+  result.textContent="No medicine is available for purchase.";
+  return;
+ }
+
+ if(qty<1){
+  result.textContent="Quantity must be at least 1.";
+  return;
+ }
+
+ const m=medicines.find(x=>x.id===medId);
+
+ if(!m){
+  result.textContent="Medicine not found.";
+  return;
+ }
+
+ if(expired(m)){
+  result.textContent="This medicine has expired and cannot be purchased.";
+  return;
+ }
+
+ if(qty>m.quantity){
+  result.textContent="Only "+m.quantity+" unit(s) are available.";
+  return;
+ }
+
+ const total=m.price*qty;
+ const invoice="PUR"+Date.now().toString().slice(-8);
+
+ m.quantity-=qty;
+
+ sales.push({
+  invoice,
+  customer:currentUsername,
+  medicine:m.name,
+  medicineId:m.id,
+  qty,
+  total,
+  date:today(),
+  source:"Patient Purchase"
+ });
+
+ saveAll();
+ renderAll();
+
+ result.innerHTML=
+ "<b>Purchase successful!</b><br>"+
+ "Purchase ID: "+invoice+"<br>"+
+ "Medicine: "+esc(m.name)+" × "+qty+"<br>"+
+ "Total: <b>"+money(total)+"</b><br>"+
+ "<span class='small'>Stock has been updated and the purchase is visible to Pharmacist/Admin.</span>";
+
+ document.getElementById("customerPurchaseQty").value=1;
+}
+
+/* =========================
+   CUSTOMER BILLS / PURCHASES
+========================= */
+
+function renderCustomerBills(){
+
+ const mine=sales.filter(s=>
+ s.customer.toLowerCase()===currentUsername.toLowerCase()
+ );
+
+ document.getElementById("customerBillList").innerHTML=
+ mine.length?
+ mine.slice().reverse().map(s=>`
+ <div class="info">
+ <b>${esc(s.invoice)}</b><br>
+ Date: ${formatDate(s.date)}<br>
+ Medicine: ${esc(s.medicine)} × ${s.qty}<br>
+ Total: <b>${money(s.total)}</b>
+ </div>
+ `).join("")
+ :"<div class='empty'>No bills found for your account.</div>";
+}
+
+function renderCustomerPurchases(){
+
+ const mine=sales.filter(s=>
+ s.customer.toLowerCase()===currentUsername.toLowerCase()
+ );
+
+ document.getElementById("customerPurchaseList").innerHTML=
+ mine.length?
+ mine.slice().reverse().map(s=>`
+ <div class="info">
+ <b>${esc(s.invoice)}</b> — ${formatDate(s.date)}<br>
+ ${esc(s.medicine)} × ${s.qty}<br>
+ Total: <b>${money(s.total)}</b>
+ ${s.source==="Patient Purchase"?'<br><span class="badge success">Patient Purchase</span>':''}
+ </div>
+ `).join("")
+ :"<div class='empty'>No purchases found for your account.</div>";
+}
+
+/* =========================
+   MAIN RENDER
+========================= */
+
+function renderAll(){
+
+ renderDashboard();
+ renderDoctorSelect();
+ renderCustomerPurchaseSelect();
+ renderMedicines();
+ renderInventory();
+ renderSales();
+ renderSuppliers();
+ renderReports();
+
+ if(currentRole==="customer"){
+  renderCustomerProfile();
+  renderCustomerConsultations();
+  renderCustomerRecords();
+  renderCustomerPrescriptions();
+  renderCustomerBills();
+  renderCustomerPurchases();
+ }
+
+ if(currentRole==="doctor"){
+  renderDoctorPatients();
+  renderDoctorConsultations();
+  renderPrescriptionPatients();
+  renderDoctorPrescriptions();
+ }
+}
+
+/* =========================
+   START
+========================= */
+
+window.addEventListener("load",()=>{
+
+ const role=localStorage.getItem("pharmaRole");
+ const user=localStorage.getItem("pharmaUser");
+
+ if(role&&user){
+  currentRole=role;
+  currentUsername=user;
+  openApplication();
+ }
+
+ const billDate=document.getElementById("billDate");
+ if(billDate)billDate.max=today();
+
+ const consultDate=document.getElementById("consultDate");
+ if(consultDate)consultDate.min=today();
+
+ renderDoctorSelect();
+ renderCustomerPurchaseSelect();
+});
+</script>
+
+</body>
+</html>
