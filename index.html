@@ -652,7 +652,7 @@ function login(){
   );
 
   const defaultDoctor =
-    DOCTORS.includes(username);
+    DEFAULT_DOCTORS.includes(username);
 
   if(!doctor && !defaultDoctor){
     error.textContent="Doctor account not registered.";
