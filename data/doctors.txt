@@ -1,0 +1,3 @@
+1|Dr. Rahul Sharma|General Physician|0000000000|Dr. Rahul Sharma@123
+2|Dr. Priya Mehta|Dermatologist|0000000000|Dr. Priya Mehta@123
+3|Dr. Amit Patil|Cardiologist|0000000000|Dr. Amit Patil@123

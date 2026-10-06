@@ -1,0 +1,5 @@
+1001|Paracetamol 500mg|Tablet|20|100|10|2027-12-31
+1002|Cetirizine 10mg|Tablet|30|50|10|2027-08-31
+1003|Amoxicillin 500mg|Capsule|50|40|5|2027-06-30
+1004|Vitamin C|Tablet|45|45|10|2028-01-31
+1005|Antiseptic Cream|Cream|60|20|5|2027-10-31
